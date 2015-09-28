@@ -12,4 +12,14 @@ public class jelly_jar_collision : MonoBehaviour {
 	void Update () {
 	
 	}
+
+    void OnTriggerEnter(Collider other)
+    {
+        //because debug
+        Debug.Log("Collision Detected");
+        //we useless now (or do we want to you know allow exploiting of the jelly?)
+        Destroy(this.gameObject);
+        //set properties of other
+        jelly_power_up powerUp = other.gameObject.AddComponent<jelly_power_up>();
+    }
 }
