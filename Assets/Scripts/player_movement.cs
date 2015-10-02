@@ -8,12 +8,10 @@ public class player_movement : MonoBehaviour {
 	public bool isJumping = false;
 	public Rigidbody2D toast;
 	private Vector3 spawn;
-	Animator  anim;
 
 	// Use this for initialization
 	void Start () {
 		toast = GetComponent<Rigidbody2D> ();
-		anim = GetComponent<Animator>();
 		spawn = transform.position;
 	}
 
@@ -23,7 +21,6 @@ public class player_movement : MonoBehaviour {
 			if (Input.GetKey (KeyCode.D)) 
 				{
 					toast.transform.Translate(Vector2.right * Toast_speed * Time.deltaTime);
-					anim.Play("jumpRight");
 				}
 			if (Input.GetKey (KeyCode.A)) 
 				{
