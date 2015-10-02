@@ -2,58 +2,79 @@
 using System.Collections;
 
 public class player_movement : MonoBehaviour {
-	
-	public float moveSpeed;
-	private Vector3 input;
-	public Rigidbody player;
 
-	
+	public float Toast_speed = 15f;
+	public float jumpHeight;
+	public bool isJumping = false;
+	public Rigidbody2D toast;
+	private Vector3 spawn;
+
+
 	// Use this for initialization
 	void Start () {
-		player = GetComponent<Rigidbody> ();
-		
+		toast = GetComponent<Rigidbody2D> ();
+		spawn = transform.position;
 	}
-	
-	public float turnSpeed = 50f;
-	public float jumpheight = 250f;
-	bool grounded = false;
-	
+
 	// Update is called once per frame
 	void FixedUpdate () 
 		{
-		
-			input = new Vector3 (Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
-		
-			if (Input.GetKey ("w"))
-				player.AddRelativeForce (input * moveSpeed);
-			if (Input.GetKey ("d"))
-				player.AddRelativeForce (input * moveSpeed);
-			if (Input.GetKey ("a"))
-				player.AddRelativeForce (input * moveSpeed);
-			if (Input.GetKey ("s"))
-				player.AddRelativeForce (input * moveSpeed);
-			if (Input.GetButton ("Jump"))
-				Jump();
-			//player.AddForce(Vector3.up * jumpheight);
-
-		}
-
-		void OnCollisionEnter(Collision collision) 
-			{
-				grounded = true;
-			}
-
-	    void Jump() 
-		{
-			if (grounded == true) 
+			if (Input.GetKey (KeyCode.D)) 
 				{
-					GetComponent<Rigidbody>().AddForce (Vector3.up * jumpheight);
-					grounded = false;
+					toast.transform.Translate(Vector2.right * Toast_speed * Time.deltaTime);
+				}
+			if (Input.GetKey (KeyCode.A)) 
+				{
+					toast.transform.Translate(Vector2.left * Toast_speed * Time.deltaTime);
+				}
+			if (Input.GetKey (KeyCode.Space) ) 
+				{
+					if(!isJumping)
+					{
+						//toast.transform.Translate(Vector2.up * jumpHeight);
+						toast.AddForce (new Vector2(0,jumpHeight));
+						isJumping = true;
+					}
 				}
 		}
-	
-	
+
+	void OnCollisionEnter2D(Collision2D col)
+	{
+		if (col.gameObject.tag == "Ground") 
+			{
+				isJumping = false;
+			}
+		if (col.gameObject.tag == "Left_wall" || col.gameObject.tag == "Right_wall") 
+			{
+				isJumping = false;
+			}
+		if (col.gameObject.tag == "Enemy") 
+			{
+				transform.position = spawn;
+			}
+	}
+
+	/*void  OnCollisionStay2D(Collision2D col)
+	{
+
+		if (col.gameObject.tag == "Left_wall" || col.gameObject.tag == "Right_wall") 
+		{
+			isJumping = false;
+		}
+
+	}
+	*/
+
 }
+
+
+
+
+
+
+
+
+
 
 
 
