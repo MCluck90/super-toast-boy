@@ -7,6 +7,7 @@ public class player_movement : MonoBehaviour {
 	public float jumpHeight;
 	public bool isJumping = false;
 	public Rigidbody2D toast;
+	public int levelNumber = 2;
 	private Vector3 spawn;
 
 	// Use this for initialization
@@ -51,6 +52,10 @@ public class player_movement : MonoBehaviour {
 			{
 				transform.position = spawn;
 			}
+		if (col.gameObject.tag == "Finish") 
+		{
+			Application.LoadLevel("Level_2"); // + (++levelNumber).ToString());
+		}
 	}
 
 	/*void  OnCollisionStay2D(Collision2D col)
