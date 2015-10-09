@@ -77,6 +77,7 @@ public class PlayerInput : MonoBehaviour {
 		}
 		
 		if (Input.GetButton("Jump") && jumpReleased) {
+			jumpReleased = false;
 			if (grounded) {
 				rigidBody.velocity = new Vector2(rigidBody.velocity.x, this.JumpSpeed);
 			} else if (wall != null) {
