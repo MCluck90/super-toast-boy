@@ -7,7 +7,6 @@ public class player_movement : MonoBehaviour {
 	public float jumpHeight;
 	public bool isJumping = false;
 	public Rigidbody2D toast;
-	public int levelNumber = 2;
 	private Vector3 spawn;
 
 	// Use this for initialization
@@ -54,7 +53,7 @@ public class player_movement : MonoBehaviour {
 			}
 		if (col.gameObject.tag == "Finish") 
 		{
-			Application.LoadLevel("Level_2"); // + (++levelNumber).ToString());
+			Application.LoadLevel("Level_ + (levelNumber++).ToString());
 		}
 	}
 
