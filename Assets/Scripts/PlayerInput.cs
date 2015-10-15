@@ -105,8 +105,10 @@ public class PlayerInput : MonoBehaviour {
 		}else if (collision.collider.CompareTag("Finish")) {
 			int i = Application.loadedLevel;
 			Application.LoadLevel(i + 1);
-		}
-	}
+		}else if (collision.collider.CompareTag("Win")){
+            Application.LoadLevel("win");
+        }
+    }
 
 	void OnCollisionExit2D(Collision2D collision) {
 		if (collision.collider == wall) {
