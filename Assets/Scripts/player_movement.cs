@@ -54,7 +54,9 @@ public class player_movement : MonoBehaviour {
 			}
 		if (col.gameObject.tag == "Finish") 
 		{
-			Application.LoadLevel("Level_2");// + (levelNumber++).ToString());
+			//Application.LoadLevel("Level_2");// + (levelNumber++).ToString());
+			int i = Application.loadedLevel;
+			Application.LoadLevel(i + 1);
 		}
 	}
 
