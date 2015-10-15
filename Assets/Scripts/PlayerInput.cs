@@ -102,6 +102,9 @@ public class PlayerInput : MonoBehaviour {
 		} else if (!isOnGround() && collision.collider.CompareTag("Wall") && wall == null) {
 			wall = collision.collider;
 			rigidBody.velocity = new Vector2(rigidBody.velocity.x, rigidBody.velocity.y * WallSlideRatio);
+		}else if (collision.collider.CompareTag("Finish")) {
+			int i = Application.loadedLevel;
+			Application.LoadLevel(i + 1);
 		}
 	}
 
