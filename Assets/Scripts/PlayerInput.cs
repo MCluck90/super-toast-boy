@@ -99,8 +99,19 @@ public class PlayerInput : MonoBehaviour {
 	void OnCollisionEnter2D(Collision2D collision) {
 		if (collision.collider.CompareTag("Enemy")) {
 			transform.position = spawnPoint;
+            GameObject[] resetables = GameObject.FindGameObjectsWithTag("Resetable");
+
+            for(int i=0; i<resetables.Length; i++)
+            {
+                resetables[i].gameObject.GetComponent<reset_script>().levelReset();
+            }
+
+            //make sure these are defaults
+            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
+            WallSlideRatio = 2;
 		} else if (!isOnGround() && collision.collider.CompareTag("Wall") && wall == null) {
-			wall = collision.collider;
+            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
+            wall = collision.collider;
 			rigidBody.velocity = new Vector2(rigidBody.velocity.x, rigidBody.velocity.y * WallSlideRatio);
 		}else if (collision.collider.CompareTag("Finish")) {
 			int i = Application.loadedLevel;
@@ -111,8 +122,10 @@ public class PlayerInput : MonoBehaviour {
     }
 
 	void OnCollisionExit2D(Collision2D collision) {
-		if (collision.collider == wall) {
-			wall = null;
+        Debug.Log("Collision Exit");
+        if (collision.collider == wall) {
+            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
+            wall = null;
 		}
 	}
 }
