@@ -6,7 +6,7 @@ public class jelly_power_up : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        expireTime = Time.time + 15.0f;
+        expireTime = Time.time + 5.0f;
         this.gameObject.GetComponent<PlayerInput>().WallSlideRatio = 0;
         this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
 	}
