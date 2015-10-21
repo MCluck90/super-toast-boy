@@ -107,9 +107,9 @@ public class PlayerInput : MonoBehaviour {
             this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
             WallSlideRatio = 2;
 		} else if (!isOnGround() && collision.collider.CompareTag("Wall") && wall == null) {
-            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
+            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 2;
             wall = collision.collider;
-			rigidBody.velocity = new Vector2(rigidBody.velocity.x, rigidBody.velocity.y * WallSlideRatio);
+			rigidBody.velocity = new Vector2(0, rigidBody.velocity.y * WallSlideRatio);
 		}else if (collision.collider.CompareTag("Finish")) {
 			int i = Application.loadedLevel;
 			Application.LoadLevel(i + 1);
