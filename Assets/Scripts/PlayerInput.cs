@@ -82,9 +82,6 @@ public class PlayerInput : MonoBehaviour {
 				rigidBody.velocity = new Vector2(rigidBody.velocity.x, this.JumpSpeed);
 			} else if (wall != null) {
 				float wallJumpDirection = (wall.transform.position.x < transform.position.x) ? 1.0f : -1.0f;
-				if (Mathf.Sign(horizontal) != wallJumpDirection) {
-					wallJumpDirection *= 0.5f;
-				}
 				rigidBody.velocity = new Vector2(this.JumpSpeed * wallJumpDirection, this.JumpSpeed);
 			}
 		} else if (!grounded && rigidBody.velocity.y > 0 && jumpReleased) {
@@ -122,7 +119,6 @@ public class PlayerInput : MonoBehaviour {
     }
 
 	void OnCollisionExit2D(Collision2D collision) {
-        Debug.Log("Collision Exit");
         if (collision.collider == wall) {
             this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
             wall = null;
