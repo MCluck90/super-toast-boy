@@ -16,6 +16,7 @@ public class PlayerInput : MonoBehaviour {
 	public float JumpSpeed;
 	public float WallSlideRatio;
 	public float TurnAroundAcceleration;
+    public bool cheat = false;
 	
 	private bool isOnGround() {
 		float lengthToSearch = 0.1f;
@@ -95,17 +96,20 @@ public class PlayerInput : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D collision) {
 		if (collision.collider.CompareTag("Enemy")) {
-			transform.position = spawnPoint;
-            GameObject[] resetables = GameObject.FindGameObjectsWithTag("Resetable");
-
-            for(int i=0; i<resetables.Length; i++)
+            if (!cheat)
             {
-                resetables[i].gameObject.GetComponent<reset_script>().levelReset();
-            }
+                transform.position = spawnPoint;
+                GameObject[] resetables = GameObject.FindGameObjectsWithTag("Resetable");
 
-            //make sure these are defaults
-            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
-            WallSlideRatio = 2;
+                for (int i = 0; i < resetables.Length; i++)
+                {
+                    resetables[i].gameObject.GetComponent<reset_script>().levelReset();
+                }
+
+                //make sure these are defaults
+                this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
+                WallSlideRatio = 2;
+            }
 		} else if (!isOnGround() && collision.collider.CompareTag("Wall") && wall == null) {
             this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 2;
             wall = collision.collider;
