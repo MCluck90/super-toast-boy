@@ -16,6 +16,7 @@ public class PlayerInput : MonoBehaviour {
 	public float JumpSpeed;
 	public float WallSlideRatio;
 	public float TurnAroundAcceleration;
+    public bool cheat = false;
 	
 	private bool isOnGround() {
 		float lengthToSearch = 0.1f;
@@ -82,9 +83,6 @@ public class PlayerInput : MonoBehaviour {
 				rigidBody.velocity = new Vector2(rigidBody.velocity.x, this.JumpSpeed);
 			} else if (wall != null) {
 				float wallJumpDirection = (wall.transform.position.x < transform.position.x) ? 1.0f : -1.0f;
-				if (Mathf.Sign(horizontal) != wallJumpDirection) {
-					wallJumpDirection *= 0.5f;
-				}
 				rigidBody.velocity = new Vector2(this.JumpSpeed * wallJumpDirection, this.JumpSpeed);
 			}
 		} else if (!grounded && rigidBody.velocity.y > 0 && jumpReleased) {
@@ -98,21 +96,24 @@ public class PlayerInput : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D collision) {
 		if (collision.collider.CompareTag("Enemy")) {
-			transform.position = spawnPoint;
-            GameObject[] resetables = GameObject.FindGameObjectsWithTag("Resetable");
-
-            for(int i=0; i<resetables.Length; i++)
+            if (!cheat)
             {
-                resetables[i].gameObject.GetComponent<reset_script>().levelReset();
-            }
+                transform.position = spawnPoint;
+                GameObject[] resetables = GameObject.FindGameObjectsWithTag("Resetable");
 
-            //make sure these are defaults
-            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
-            WallSlideRatio = 2;
+                for (int i = 0; i < resetables.Length; i++)
+                {
+                    resetables[i].gameObject.GetComponent<reset_script>().levelReset();
+                }
+
+                //make sure these are defaults
+                this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
+                WallSlideRatio = 2;
+            }
 		} else if (!isOnGround() && collision.collider.CompareTag("Wall") && wall == null) {
-            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 0;
+            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 2;
             wall = collision.collider;
-			rigidBody.velocity = new Vector2(rigidBody.velocity.x, rigidBody.velocity.y * WallSlideRatio);
+			rigidBody.velocity = new Vector2(0, rigidBody.velocity.y * WallSlideRatio);
 		}else if (collision.collider.CompareTag("Finish")) {
 			int i = Application.loadedLevel;
 			Application.LoadLevel(i + 1);
@@ -122,7 +123,6 @@ public class PlayerInput : MonoBehaviour {
     }
 
 	void OnCollisionExit2D(Collision2D collision) {
-        Debug.Log("Collision Exit");
         if (collision.collider == wall) {
             this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
             wall = null;
