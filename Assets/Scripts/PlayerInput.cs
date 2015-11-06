@@ -77,16 +77,33 @@ public class PlayerInput : MonoBehaviour {
 			horizontalSpeed = maxSpeed;
 		}
 
-		if (!prevJumpPressed && jumpPressed) {
+		if (!prevJumpPressed && jumpPressed && isOnGround()) {
 			verticalSpeed = JumpSpeed;
+			transform.rotation = Quaternion.FromToRotation(Vector3.up, Vector3.up);
 		} else if (prevJumpPressed && !jumpPressed) {
 			verticalSpeed = 0f;
 		}
-
+		
 		rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
 	}
 
 	void OnCollisionEnter2D(Collision2D collision) {
+		var angle = 0f;
+		Vector2 normal = Vector2.zero;
+		foreach (var contact in collision.contacts) {
+			var possibleAngle = Vector2.Angle(Vector2.up, contact.normal);
+			if (Mathf.Abs(angle) < 46) {
+				angle = possibleAngle;
+				normal = contact.normal;
+				if (angle == 0f) {
+					break;
+				}
+			}
+		}
+		if (Mathf.Abs(angle) < 46) {
+			transform.rotation = Quaternion.FromToRotation(Vector3.up, normal);
+		}
+
 		if (collision.collider.CompareTag("Enemy")) {
             if (!cheat)
             {
