@@ -27,6 +27,24 @@ public class PlayerInput : MonoBehaviour {
 		return Physics2D.Linecast(start, end);
 	}
 
+	private bool isOnLeftWall() {
+		float lengthToSearch = 0.05f;
+		var collider = GetComponent<BoxCollider2D>();
+		Vector2 start = new Vector2(collider.bounds.min.x - 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
+		Vector2 end = new Vector2(start.x - lengthToSearch, start.y);
+		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		return hit && hit.normal.x == 1;
+	}
+
+	private bool isOnRightWall() {
+		float lengthToSearch = 0.1f;
+		var collider = GetComponent<BoxCollider2D>();
+		Vector2 start = new Vector2(collider.bounds.max.x + 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
+		Vector2 end = new Vector2(start.x + lengthToSearch, start.y);
+		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		return hit && hit.normal.x == -1;
+	}
+
 	void Start() {
 		renderer = GetComponent<SpriteRenderer>();
 		rigidBody = GetComponent<Rigidbody2D>();
@@ -79,8 +97,10 @@ public class PlayerInput : MonoBehaviour {
 		} else if (prevJumpPressed && !jumpPressed) {
 			verticalSpeed = 0f;
 		}
-		
-		rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
+
+		isOnLeftWall();
+		isOnRightWall();
+        rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
 	}
 
 	void OnCollisionEnter2D(Collision2D collision) {
