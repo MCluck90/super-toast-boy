@@ -6,9 +6,10 @@ public class PlayerInput : MonoBehaviour {
 	private Rigidbody2D rigidBody;
 	private Collider2D wall;
 	private bool horizontalReleased = false;
-	private bool jumpReleased = true;
+	private bool jumpPressed = true;
 	private Vector3 spawnPoint;
-
+	private const float DEAD_ZONE = 0.1f;
+	
 	public float MaxSpeed;
 	public float MaxRunSpeed;
 	public float Acceleration;
@@ -34,64 +35,55 @@ public class PlayerInput : MonoBehaviour {
 		renderer = GetComponent<SpriteRenderer>();
 		rigidBody = GetComponent<Rigidbody2D>();
 		spawnPoint = transform.position;
+		jumpPressed = Input.GetButton("Jump");
 	}
 
 	void Update() {
-		float horizontal = Input.GetAxis("Horizontal");
+		float horizontal = Input.GetAxisRaw("Horizontal");
 		bool grounded = isOnGround();
 		float acceleration;
 		float maxSpeed;
-		if (Input.GetButton("Run")) {
+		float horizontalSpeed = rigidBody.velocity.x;
+		float verticalSpeed = rigidBody.velocity.y;
+		bool prevJumpPressed = jumpPressed;
+		jumpPressed = Input.GetButton("Jump");
+		if (Input.GetButton("Run") || Input.GetAxis("Run") != 0) {
 			acceleration = RunAcceleration;
 			maxSpeed = MaxRunSpeed;
 		} else {
 			acceleration = Acceleration;
 			maxSpeed = MaxSpeed;
 		}
-		if (horizontal < -0.1f) {
-			// Left
-			if (rigidBody.velocity.x > -maxSpeed) {
-				if (rigidBody.velocity.x > 0) {
-					acceleration *= TurnAroundAcceleration;
-				}
-				rigidBody.AddForce(new Vector2(-acceleration, 0.0f));
+
+		if (horizontal == 0f) {
+			horizontalSpeed = 0f;
+		} else if (horizontal > DEAD_ZONE) {
+			if (horizontalSpeed < 0f) {
+				horizontalSpeed = 0f;
 			} else {
-				rigidBody.velocity = new Vector2(-maxSpeed, rigidBody.velocity.y);
+				horizontalSpeed += acceleration * Time.deltaTime;
 			}
-		} else if (horizontal > 0.1f) {
-			// Right
-			if (rigidBody.velocity.x < maxSpeed) {
-				if (rigidBody.velocity.x < 0) {
-					acceleration *= TurnAroundAcceleration;
-				}
-				rigidBody.AddForce(new Vector2(acceleration, 0.0f));
+		} else if (horizontal < DEAD_ZONE) {
+			if (horizontalSpeed > 0f) {
+				horizontalSpeed = 0f;
+			} else {
+				horizontalSpeed -= acceleration * Time.deltaTime;
 			}
-			else {
-				rigidBody.velocity = new Vector2(maxSpeed, rigidBody.velocity.y);
-			}
-		} else {
-			if (horizontalReleased) {
-				horizontalReleased = false;
-				rigidBody.velocity = new Vector2(0.0f, rigidBody.velocity.y);
-			}
-			horizontalReleased = true;
-		}
-		
-		if (Input.GetButton("Jump") && jumpReleased) {
-			jumpReleased = false;
-			if (grounded) {
-				rigidBody.velocity = new Vector2(rigidBody.velocity.x, this.JumpSpeed);
-			} else if (wall != null) {
-				float wallJumpDirection = (wall.transform.position.x < transform.position.x) ? 1.0f : -1.0f;
-				rigidBody.velocity = new Vector2(this.JumpSpeed * wallJumpDirection, this.JumpSpeed);
-			}
-		} else if (!grounded && rigidBody.velocity.y > 0 && jumpReleased) {
-			rigidBody.velocity = new Vector2(rigidBody.velocity.x, 0.0f);
 		}
 
-		if (!Input.GetButton("Jump")) {
-			jumpReleased = true;
+		if (horizontalSpeed < -maxSpeed) {
+			horizontalSpeed = -maxSpeed;
+		} else if (horizontalSpeed > maxSpeed) {
+			horizontalSpeed = maxSpeed;
 		}
+
+		if (!prevJumpPressed && jumpPressed) {
+			verticalSpeed = JumpSpeed;
+		} else if (prevJumpPressed && !jumpPressed) {
+			verticalSpeed = 0f;
+		}
+
+		rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
 	}
 
 	void OnCollisionEnter2D(Collision2D collision) {
