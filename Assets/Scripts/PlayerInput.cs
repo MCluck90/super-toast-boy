@@ -21,14 +21,10 @@ public class PlayerInput : MonoBehaviour {
 	
 	private bool isOnGround() {
 		float lengthToSearch = 0.1f;
-		float colliderThreshold = 0.001f;
-		Vector2 lineStart = new Vector2(
-			transform.position.x, 
-			transform.position.y - renderer.bounds.extents.y - colliderThreshold
-		);
-		Vector2 vectorToSearch = new Vector2(transform.position.x, lineStart.y - lengthToSearch);
-		RaycastHit2D hit = Physics2D.Linecast(lineStart, vectorToSearch);
-		return hit;
+		var collider = GetComponent<BoxCollider2D>();
+		Vector2 start = new Vector2(collider.bounds.center.x, collider.bounds.min.y - lengthToSearch);
+		Vector2 end = new Vector2(start.x, start.y - lengthToSearch);
+		return Physics2D.Linecast(start, end);
 	}
 
 	void Start() {
