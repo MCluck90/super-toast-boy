@@ -20,7 +20,6 @@ public class PlayerInput : MonoBehaviour {
 	public float JumpSpeed;
 	public float WallJumpHorizontalSpeed;
 	public float WallJumpVerticalSpeed;
-    public bool cheat = false;
 	
 	private bool isOnGround(out Vector2 normal) {
 		float lengthToSearch = 0.1f;
@@ -42,6 +41,12 @@ public class PlayerInput : MonoBehaviour {
 		Vector2 start = new Vector2(collider.bounds.min.x - 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
 		Vector2 end = new Vector2(start.x - lengthToSearch, start.y);
 		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		if (!hit) {
+			// Try higher up
+			start.y -= collider.bounds.extents.y / 2f;
+			end.y = start.y;
+			hit = Physics2D.Linecast(start, end);
+        }
 		return hit && hit.normal.x == 1;
 	}
 
@@ -51,6 +56,12 @@ public class PlayerInput : MonoBehaviour {
 		Vector2 start = new Vector2(collider.bounds.max.x + 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
 		Vector2 end = new Vector2(start.x + lengthToSearch, start.y);
 		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		if (!hit) {
+			// Try higher up
+			start.y -= collider.bounds.extents.y / 2f;
+			end.y = start.y;
+			hit = Physics2D.Linecast(start, end);
+		}
 		return hit && hit.normal.x == -1;
 	}
 
@@ -166,11 +177,4 @@ public class PlayerInput : MonoBehaviour {
 			transform.rotation = Quaternion.FromToRotation(Vector3.up, normal);
 		}
     }
-
-	void OnCollisionExit2D(Collision2D collision) {
-        if (collision.collider == wall) {
-            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
-            wall = null;
-		}
-	}
 }
