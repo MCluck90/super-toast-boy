@@ -74,11 +74,27 @@ public class PlayerInput : MonoBehaviour {
 	}
 
 	void FixedUpdate() {
-		var colliders = Physics2D.OverlapCircleAll(transform.position, transform.lossyScale.y, LayerMask.GetMask("Ground"));
+		// Determine if we're on a slope by determining
+		// if the contact is angled and if we only make contact with one corner
+		// or if the slope is next to us and it's angled
+		var box = GetComponent<BoxCollider2D>();
+		var centerStart = new Vector2(box.bounds.center.x, box.bounds.min.y - 0.001f);
+		var centerEnd = new Vector2(centerStart.x, centerStart.y - 0.1f);
+		var leftStart = new Vector2(box.bounds.min.x, centerStart.y);
+		var leftEnd = new Vector2(leftStart.x, centerStart.y - 0.3f);
+		var rightStart = new Vector2(box.bounds.max.x, centerStart.y);
+		var rightEnd = new Vector2(rightStart.x, centerStart.y - 0.3f);
+		var centerCollision = Physics2D.Linecast(centerStart, centerEnd);
+		var leftCollision = Physics2D.Linecast(leftStart, leftEnd);
+		var rightCollision = Physics2D.Linecast(rightStart, rightEnd);
 		var rotated = false;
+		var colliders = Physics2D.OverlapCircleAll(transform.position, transform.lossyScale.y, LayerMask.GetMask("Ground"));
 		foreach (var collider in colliders) {
 			var angle = Mathf.Floor(collider.transform.eulerAngles.z);
-			if (angle == 45f) {
+			var isBelow = box.bounds.center.y < collider.bounds.max.y;
+			var isLeftCollision = (leftCollision && leftCollision.collider == collider);
+			var isRightCollision = (rightCollision && rightCollision.collider == collider);
+			if (angle == 45f && (isBelow || (!centerCollision && !isLeftCollision && !isRightCollision))) { 
 				rotated = true;
 				transform.eulerAngles = new Vector3(0f, 0f, angle);
 				break;
