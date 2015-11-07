@@ -11,6 +11,7 @@ public class PlayerInput : MonoBehaviour {
 	private const float DEAD_ZONE = 0.1f;
 	private float initialGravity;
 	private float previousHorizontal = 0f;
+	private float prevXSpeed = 0f;
 	
 	public float MaxSpeed;
 	public float MaxRunSpeed;
@@ -21,12 +22,18 @@ public class PlayerInput : MonoBehaviour {
 	public float WallJumpVerticalSpeed;
     public bool cheat = false;
 	
-	private bool isOnGround() {
+	private bool isOnGround(out Vector2 normal) {
 		float lengthToSearch = 0.1f;
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.center.x, collider.bounds.min.y - lengthToSearch);
 		Vector2 end = new Vector2(start.x, start.y - lengthToSearch);
-		return Physics2D.Linecast(start, end);
+		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		if (hit) {
+			normal = hit.normal;
+		} else {
+			normal = Vector2.zero;
+		}
+		return hit;
 	}
 
 	private bool isOnLeftWall() {
@@ -57,7 +64,8 @@ public class PlayerInput : MonoBehaviour {
 
 	void Update() {
 		float horizontal = Input.GetAxisRaw("Horizontal");
-		bool grounded = isOnGround();
+		Vector2 groundNormal;
+		bool grounded = isOnGround(out groundNormal);
 		bool hitLeftWall = isOnLeftWall();
 		bool hitRightWall = isOnRightWall();
 		bool onWall = hitLeftWall || hitRightWall;
@@ -96,14 +104,20 @@ public class PlayerInput : MonoBehaviour {
 					horizontalSpeed -= acceleration * Time.deltaTime;
 				}
 			}
-
+			
 			if (!prevJumpPressed && jumpPressed) {
 				verticalSpeed = JumpSpeed;
-			} else if (prevJumpPressed && !jumpPressed) {
-				verticalSpeed = 0f;
+			}
+
+			var normalAngle = Mathf.Floor(Vector2.Angle(transform.up, groundNormal));
+			if (normalAngle == 45f) {
+				verticalSpeed = horizontalSpeed;
 			}
 		} else if (inAir) {
 			transform.rotation = Quaternion.FromToRotation(Vector3.up, Vector3.up);
+			if (prevJumpPressed && !jumpPressed) {
+				verticalSpeed = 0f;
+			}
 			if (Mathf.Sign(previousHorizontal) != Mathf.Sign(horizontal)) {
 				horizontalSpeed = 0f;
 			} else if (horizontal > DEAD_ZONE) {
@@ -132,6 +146,7 @@ public class PlayerInput : MonoBehaviour {
 
 		previousHorizontal = horizontal;
         rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
+		prevXSpeed = horizontalSpeed;
 	}
 
 	void OnCollisionEnter2D(Collision2D collision) {
