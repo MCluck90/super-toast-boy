@@ -73,6 +73,22 @@ public class PlayerInput : MonoBehaviour {
 		initialGravity = rigidBody.gravityScale;
 	}
 
+	void FixedUpdate() {
+		var colliders = Physics2D.OverlapCircleAll(transform.position, transform.lossyScale.y, LayerMask.GetMask("Ground"));
+		var rotated = false;
+		foreach (var collider in colliders) {
+			var angle = Mathf.Floor(collider.transform.eulerAngles.z);
+			if (angle == 45f) {
+				rotated = true;
+				transform.eulerAngles = new Vector3(0f, 0f, angle);
+				break;
+			}
+		}
+		if (!rotated) {
+			transform.eulerAngles = Vector3.zero;
+		}
+	}
+
 	void Update() {
 		float horizontal = Input.GetAxisRaw("Horizontal");
 		Vector2 groundNormal;
@@ -159,22 +175,4 @@ public class PlayerInput : MonoBehaviour {
         rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
 		prevXSpeed = horizontalSpeed;
 	}
-
-	void OnCollisionEnter2D(Collision2D collision) {
-		var angle = 0f;
-		Vector2 normal = Vector2.zero;
-		foreach (var contact in collision.contacts) {
-			var possibleAngle = Vector2.Angle(Vector2.up, contact.normal);
-			if (Mathf.Abs(angle) < 46) {
-				angle = possibleAngle;
-				normal = contact.normal;
-				if (angle == 0f) {
-					break;
-				}
-			}
-		}
-		if (Mathf.Abs(angle) < 46) {
-			transform.rotation = Quaternion.FromToRotation(Vector3.up, normal);
-		}
-    }
 }
