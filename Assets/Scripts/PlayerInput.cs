@@ -5,18 +5,20 @@ public class PlayerInput : MonoBehaviour {
 	private new SpriteRenderer renderer;
 	private Rigidbody2D rigidBody;
 	private Collider2D wall;
-	private bool horizontalReleased = false;
 	private bool jumpPressed = true;
+	private bool inAir = false;
 	private Vector3 spawnPoint;
 	private const float DEAD_ZONE = 0.1f;
+	private float initialGravity;
+	private float previousHorizontal = 0f;
 	
 	public float MaxSpeed;
 	public float MaxRunSpeed;
 	public float Acceleration;
 	public float RunAcceleration;
 	public float JumpSpeed;
-	public float WallSlideRatio;
-	public float TurnAroundAcceleration;
+	public float WallJumpHorizontalSpeed;
+	public float WallJumpVerticalSpeed;
     public bool cheat = false;
 	
 	private bool isOnGround() {
@@ -50,18 +52,25 @@ public class PlayerInput : MonoBehaviour {
 		rigidBody = GetComponent<Rigidbody2D>();
 		spawnPoint = transform.position;
 		jumpPressed = Input.GetButton("Jump");
+		initialGravity = rigidBody.gravityScale;
 	}
 
 	void Update() {
 		float horizontal = Input.GetAxisRaw("Horizontal");
 		bool grounded = isOnGround();
-		float acceleration;
-		float maxSpeed;
+		bool hitLeftWall = isOnLeftWall();
+		bool hitRightWall = isOnRightWall();
+		bool onWall = hitLeftWall || hitRightWall;
+		bool wasInAir = inAir;
 		float horizontalSpeed = rigidBody.velocity.x;
 		float verticalSpeed = rigidBody.velocity.y;
 		bool prevJumpPressed = jumpPressed;
+		bool holdingRun = (Input.GetButton("Run") || Input.GetAxis("Run") != 0);
+		float acceleration;
+		float maxSpeed;
 		jumpPressed = Input.GetButton("Jump");
-		if (Input.GetButton("Run") || Input.GetAxis("Run") != 0) {
+		inAir = !grounded && !onWall;
+		if (holdingRun) {
 			acceleration = RunAcceleration;
 			maxSpeed = MaxRunSpeed;
 		} else {
@@ -69,37 +78,59 @@ public class PlayerInput : MonoBehaviour {
 			maxSpeed = MaxSpeed;
 		}
 
-		if (horizontal == 0f) {
-			horizontalSpeed = 0f;
-		} else if (horizontal > DEAD_ZONE) {
-			if (horizontalSpeed < 0f) {
+		if (grounded) {
+			if (horizontal == 0f || wasInAir) {
 				horizontalSpeed = 0f;
-			} else {
+			} else if (horizontal > DEAD_ZONE) {
+				if (horizontalSpeed < 0f) {
+					horizontalSpeed = 0f;
+				}
+				else {
+					horizontalSpeed += acceleration * Time.deltaTime;
+				}
+			} else if (horizontal < -DEAD_ZONE) {
+				if (horizontalSpeed > 0f) {
+					horizontalSpeed = 0f;
+				}
+				else {
+					horizontalSpeed -= acceleration * Time.deltaTime;
+				}
+			}
+
+			if (!prevJumpPressed && jumpPressed) {
+				verticalSpeed = JumpSpeed;
+			} else if (prevJumpPressed && !jumpPressed) {
+				verticalSpeed = 0f;
+			}
+		} else if (inAir) {
+			transform.rotation = Quaternion.FromToRotation(Vector3.up, Vector3.up);
+			if (Mathf.Sign(previousHorizontal) != Mathf.Sign(horizontal)) {
+				horizontalSpeed = 0f;
+			} else if (horizontal > DEAD_ZONE) {
 				horizontalSpeed += acceleration * Time.deltaTime;
 			}
-		} else if (horizontal < DEAD_ZONE) {
-			if (horizontalSpeed > 0f) {
-				horizontalSpeed = 0f;
-			} else {
+			else if (horizontal < -DEAD_ZONE) {
 				horizontalSpeed -= acceleration * Time.deltaTime;
 			}
+		} else if (onWall) {
+			if (!prevJumpPressed && jumpPressed) {
+				verticalSpeed = WallJumpVerticalSpeed;
+				maxSpeed = (holdingRun) ? MaxRunSpeed : MaxSpeed;
+				if (hitLeftWall) {
+					horizontalSpeed = WallJumpHorizontalSpeed;
+				} else {
+					horizontalSpeed = -WallJumpHorizontalSpeed;
+				}
+			}
 		}
-
+		
 		if (horizontalSpeed < -maxSpeed) {
 			horizontalSpeed = -maxSpeed;
 		} else if (horizontalSpeed > maxSpeed) {
 			horizontalSpeed = maxSpeed;
 		}
 
-		if (!prevJumpPressed && jumpPressed && isOnGround()) {
-			verticalSpeed = JumpSpeed;
-			transform.rotation = Quaternion.FromToRotation(Vector3.up, Vector3.up);
-		} else if (prevJumpPressed && !jumpPressed) {
-			verticalSpeed = 0f;
-		}
-
-		isOnLeftWall();
-		isOnRightWall();
+		previousHorizontal = horizontal;
         rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
 	}
 
@@ -119,32 +150,6 @@ public class PlayerInput : MonoBehaviour {
 		if (Mathf.Abs(angle) < 46) {
 			transform.rotation = Quaternion.FromToRotation(Vector3.up, normal);
 		}
-
-		if (collision.collider.CompareTag("Enemy")) {
-            if (!cheat)
-            {
-                transform.position = spawnPoint;
-                GameObject[] resetables = GameObject.FindGameObjectsWithTag("Resetable");
-
-                for (int i = 0; i < resetables.Length; i++)
-                {
-                    resetables[i].gameObject.GetComponent<reset_script>().levelReset();
-                }
-
-                //make sure these are defaults
-                this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 6;
-                WallSlideRatio = 2;
-            }
-		} else if (!isOnGround() && collision.collider.CompareTag("Wall") && wall == null) {
-            this.gameObject.GetComponent<Rigidbody2D>().gravityScale = 2;
-            wall = collision.collider;
-			rigidBody.velocity = new Vector2(0, rigidBody.velocity.y * WallSlideRatio);
-		}else if (collision.collider.CompareTag("Finish")) {
-			int i = Application.loadedLevel;
-			Application.LoadLevel(i + 1);
-		}else if (collision.collider.CompareTag("Win")){
-            Application.LoadLevel("win");
-        }
     }
 
 	void OnCollisionExit2D(Collision2D collision) {
