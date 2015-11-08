@@ -35,7 +35,8 @@ public class PlayerInput : MonoBehaviour {
 		return hit;
 	}
 
-	private bool isOnLeftWall() {
+	private bool isOnLeftWall(out bool isSlippery) {
+		isSlippery = false;
 		float lengthToSearch = 0.05f;
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.min.x - 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
@@ -46,11 +47,14 @@ public class PlayerInput : MonoBehaviour {
 			start.y -= collider.bounds.extents.y / 2f;
 			end.y = start.y;
 			hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
-        }
+        } else {
+			isSlippery = hit.transform.gameObject.CompareTag("Slippery");
+		}
 		return hit && hit.normal.x == 1;
 	}
 
-	private bool isOnRightWall() {
+	private bool isOnRightWall(out bool isSlippery) {
+		isSlippery = false;
 		float lengthToSearch = 0.1f;
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.max.x + 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
@@ -61,6 +65,8 @@ public class PlayerInput : MonoBehaviour {
 			start.y -= collider.bounds.extents.y / 2f;
 			end.y = start.y;
 			hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
+		} else {
+			isSlippery = hit.transform.gameObject.CompareTag("Slippery");
 		}
 		return hit && hit.normal.x == -1;
 	}
@@ -109,9 +115,11 @@ public class PlayerInput : MonoBehaviour {
 	void Update() {
 		float horizontal = Input.GetAxisRaw("Horizontal");
 		Vector2 groundNormal;
+		bool slipperyLeft;
+		bool slipperyRight;
 		bool grounded = isOnGround(out groundNormal);
-		bool hitLeftWall = isOnLeftWall();
-		bool hitRightWall = isOnRightWall();
+		bool hitLeftWall = isOnLeftWall(out slipperyLeft);
+		bool hitRightWall = isOnRightWall(out slipperyRight);
 		bool onWall = hitLeftWall || hitRightWall;
 		bool wasInAir = inAir;
 		float horizontalSpeed = rigidBody.velocity.x;
@@ -175,7 +183,7 @@ public class PlayerInput : MonoBehaviour {
 			else if (horizontal < -DEAD_ZONE) {
 				horizontalSpeed -= acceleration * Time.deltaTime;
 			}
-		} else if (onWall) {
+		} else if (onWall && ((hitLeftWall && !slipperyLeft) || (hitRightWall && !slipperyRight))) {
 			if (!prevJumpPressed && jumpPressed) {
 				verticalSpeed = WallJumpVerticalSpeed;
 				maxSpeed = (holdingRun) ? MaxRunSpeed : MaxSpeed;
