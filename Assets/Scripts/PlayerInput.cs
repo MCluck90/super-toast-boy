@@ -210,6 +210,12 @@ public class PlayerInput : MonoBehaviour {
 		}
 	}
 
+	void OnTriggerEnter2D(Collider2D other) {
+		if (other.CompareTag("Win")) {
+			Application.LoadLevel(Application.loadedLevel + 1);
+		}
+	}
+
 	public void Die() {
 		// Later, add sound effects etc.
 		transform.position = spawnPoint;
