@@ -170,9 +170,7 @@ public class PlayerInput : MonoBehaviour {
 			if (prevJumpPressed && !jumpPressed && verticalSpeed > 0) {
 				verticalSpeed = 0f;
 			}
-			if (Mathf.Sign(previousHorizontal) != Mathf.Sign(horizontal)) {
-				horizontalSpeed = 0f;
-			} else if (horizontal > DEAD_ZONE) {
+			if (horizontal > DEAD_ZONE) {
 				horizontalSpeed += acceleration * Time.deltaTime;
 			}
 			else if (horizontal < -DEAD_ZONE) {
