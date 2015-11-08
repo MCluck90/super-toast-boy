@@ -2,13 +2,14 @@
 using System.Collections;
 
 public class PlayerInput : MonoBehaviour {
+	private const float DEAD_ZONE = 0.1f;
+	private const int ALL_BUT_TRIGGERS = ~(1 << 10);
 	private new SpriteRenderer renderer;
 	private Rigidbody2D rigidBody;
 	private Collider2D wall;
 	private bool jumpPressed = true;
 	private bool inAir = false;
 	private Vector3 spawnPoint;
-	private const float DEAD_ZONE = 0.1f;
 	private float initialGravity;
 	private float previousHorizontal = 0f;
 	private float prevXSpeed = 0f;
@@ -26,7 +27,7 @@ public class PlayerInput : MonoBehaviour {
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.center.x, collider.bounds.min.y - lengthToSearch);
 		Vector2 end = new Vector2(start.x, start.y - lengthToSearch);
-		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		RaycastHit2D hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
 		if (hit) {
 			normal = hit.normal;
 		} else {
@@ -40,12 +41,12 @@ public class PlayerInput : MonoBehaviour {
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.min.x - 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
 		Vector2 end = new Vector2(start.x - lengthToSearch, start.y);
-		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		RaycastHit2D hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
 		if (!hit) {
 			// Try higher up
 			start.y -= collider.bounds.extents.y / 2f;
 			end.y = start.y;
-			hit = Physics2D.Linecast(start, end);
+			hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
         }
 		return hit && hit.normal.x == 1;
 	}
@@ -55,12 +56,12 @@ public class PlayerInput : MonoBehaviour {
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.max.x + 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
 		Vector2 end = new Vector2(start.x + lengthToSearch, start.y);
-		RaycastHit2D hit = Physics2D.Linecast(start, end);
+		RaycastHit2D hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
 		if (!hit) {
 			// Try higher up
 			start.y -= collider.bounds.extents.y / 2f;
 			end.y = start.y;
-			hit = Physics2D.Linecast(start, end);
+			hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
 		}
 		return hit && hit.normal.x == -1;
 	}
@@ -70,6 +71,7 @@ public class PlayerInput : MonoBehaviour {
 		rigidBody = GetComponent<Rigidbody2D>();
 		spawnPoint = transform.position;
 		jumpPressed = Input.GetButton("Jump");
+		inAir = false;
 		initialGravity = rigidBody.gravityScale;
 	}
 
@@ -84,9 +86,9 @@ public class PlayerInput : MonoBehaviour {
 		var leftEnd = new Vector2(leftStart.x, centerStart.y - 0.3f);
 		var rightStart = new Vector2(box.bounds.max.x, centerStart.y);
 		var rightEnd = new Vector2(rightStart.x, centerStart.y - 0.3f);
-		var centerCollision = Physics2D.Linecast(centerStart, centerEnd);
-		var leftCollision = Physics2D.Linecast(leftStart, leftEnd);
-		var rightCollision = Physics2D.Linecast(rightStart, rightEnd);
+		var centerCollision = Physics2D.Linecast(centerStart, centerEnd, ALL_BUT_TRIGGERS);
+		var leftCollision = Physics2D.Linecast(leftStart, leftEnd, ALL_BUT_TRIGGERS);
+		var rightCollision = Physics2D.Linecast(rightStart, rightEnd, ALL_BUT_TRIGGERS);
 		var rotated = false;
 		var colliders = Physics2D.OverlapCircleAll(transform.position, transform.lossyScale.y, LayerMask.GetMask("Ground"));
 		foreach (var collider in colliders) {
@@ -129,8 +131,15 @@ public class PlayerInput : MonoBehaviour {
 			maxSpeed = MaxSpeed;
 		}
 
+		// Flip the sprite accordingly
+		if (horizontal != 0f && Mathf.Sign(transform.localScale.x) != Mathf.Sign(horizontal)) {
+			var localScale = transform.localScale;
+			localScale.x *= -1;
+			transform.localScale = localScale;
+		}
+
 		if (grounded) {
-			if (horizontal == 0f || wasInAir) {
+			if (horizontal == 0f) {
 				horizontalSpeed = 0f;
 			} else if (horizontal > DEAD_ZONE) {
 				if (horizontalSpeed < 0f) {
@@ -158,7 +167,7 @@ public class PlayerInput : MonoBehaviour {
 			}
 		} else if (inAir) {
 			transform.rotation = Quaternion.FromToRotation(Vector3.up, Vector3.up);
-			if (prevJumpPressed && !jumpPressed) {
+			if (prevJumpPressed && !jumpPressed && verticalSpeed > 0) {
 				verticalSpeed = 0f;
 			}
 			if (Mathf.Sign(previousHorizontal) != Mathf.Sign(horizontal)) {
@@ -190,5 +199,17 @@ public class PlayerInput : MonoBehaviour {
 		previousHorizontal = horizontal;
         rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
 		prevXSpeed = horizontalSpeed;
+	}
+
+	void OnTriggerExit2D(Collider2D other) {
+		if (other.CompareTag("LevelBoundary")) {
+			Die();
+		}
+	}
+
+	public void Die() {
+		// Later, add sound effects etc.
+		transform.position = spawnPoint;
+		rigidBody.velocity = Vector2.zero;
 	}
 }
