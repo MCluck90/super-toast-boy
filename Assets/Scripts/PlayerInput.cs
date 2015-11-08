@@ -213,6 +213,8 @@ public class PlayerInput : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D other) {
 		if (other.CompareTag("Win")) {
 			Application.LoadLevel(Application.loadedLevel + 1);
+		} else if (other.CompareTag("Enemy")) {
+			Die();
 		}
 	}
 
