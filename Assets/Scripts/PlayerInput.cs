@@ -12,7 +12,6 @@ public class PlayerInput : MonoBehaviour {
 	private Vector3 spawnPoint;
 	private float initialGravity;
 	private float previousHorizontal = 0f;
-	private float prevXSpeed = 0f;
 	
 	public float MaxSpeed;
 	public float MaxRunSpeed;
@@ -196,7 +195,13 @@ public class PlayerInput : MonoBehaviour {
 
 		previousHorizontal = horizontal;
         rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
-		prevXSpeed = horizontalSpeed;
+		var animator = GetComponent<Animator>();
+		animator.SetBool("IsRunning", horizontalSpeed != 0f && !inAir);
+		animator.SetBool("IsInAir", inAir);
+		animator.SetBool("IsSliding", onWall);
+		if (horizontalSpeed != 0f) {
+			animator.speed = Mathf.Min(Mathf.Abs(horizontalSpeed) / 8f, 2f);
+		}
 	}
 
 	void OnTriggerExit2D(Collider2D other) {
