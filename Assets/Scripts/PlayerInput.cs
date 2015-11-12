@@ -12,6 +12,7 @@ public class PlayerInput : MonoBehaviour {
 	private Vector3 spawnPoint;
 	private float initialGravity;
 	private float previousHorizontal = 0f;
+	private bool isInvincible = false;
 	
 	public float MaxSpeed;
 	public float MaxRunSpeed;
@@ -113,6 +114,8 @@ public class PlayerInput : MonoBehaviour {
 	}
 
 	void Update() {
+		Cheats();
+
 		float horizontal = Input.GetAxisRaw("Horizontal");
 		Vector2 groundNormal;
 		bool slipperyLeft;
@@ -221,7 +224,7 @@ public class PlayerInput : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D other) {
 		if (other.CompareTag("Win")) {
 			Application.LoadLevel(Application.loadedLevel + 1);
-		} else if (other.CompareTag("Enemy")) {
+		} else if (other.CompareTag("Enemy") && !isInvincible) {
 			Die();
 		}
 	}
@@ -230,5 +233,27 @@ public class PlayerInput : MonoBehaviour {
 		// Later, add sound effects etc.
 		transform.position = spawnPoint;
 		rigidBody.velocity = Vector2.zero;
+	}
+
+	// Any and all cheat codes available here
+	public void Cheats() {
+		// Let the player choose their level, main menu through 1-4
+		KeyCode[] levels = new KeyCode[] {
+			KeyCode.Alpha0,
+			KeyCode.Alpha1,
+			KeyCode.Alpha2,
+			KeyCode.Alpha3,
+			KeyCode.Alpha4
+		};
+		for (int i = 0; i < levels.Length; i++) {
+			if (Input.GetKeyDown(levels[i])) {
+				Application.LoadLevel(i);
+			}
+		}
+
+		// Allow invincibility
+		if (Input.GetKeyDown(KeyCode.Backspace)) {
+			isInvincible = !isInvincible;
+		}
 	}
 }
