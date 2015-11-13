@@ -2,6 +2,11 @@
 using System.Collections;
 
 public class PlayerInput : MonoBehaviour {
+	public enum PowerUp {
+		None,
+		Jelly
+	}
+
 	private const float DEAD_ZONE = 0.1f;
 	private const int ALL_BUT_TRIGGERS = ~(1 << 10);
 	private new SpriteRenderer renderer;
@@ -21,6 +26,7 @@ public class PlayerInput : MonoBehaviour {
 	public float JumpSpeed;
 	public float WallJumpHorizontalSpeed;
 	public float WallJumpVerticalSpeed;
+	public PowerUp PowerUpState = PowerUp.None;
 	
 	private bool isOnGround(out Vector2 normal) {
 		float lengthToSearch = 0.1f;
@@ -42,34 +48,55 @@ public class PlayerInput : MonoBehaviour {
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.min.x - 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
 		Vector2 end = new Vector2(start.x - lengthToSearch, start.y);
-		RaycastHit2D hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
-		if (!hit) {
-			// Try higher up
+		RaycastHit2D[] hits = Physics2D.LinecastAll(start, end, ALL_BUT_TRIGGERS);
+		if (hits.Length == 0) {
 			start.y -= collider.bounds.extents.y / 2f;
 			end.y = start.y;
-			hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
-        } else {
-			isSlippery = hit.transform.gameObject.CompareTag("Slippery");
+			hits = Physics2D.LinecastAll(start, end, ALL_BUT_TRIGGERS);
 		}
-		return hit && hit.normal.x == 1;
+
+		bool result = false;
+		foreach (var hit in hits) {
+			if (PowerUpState != PowerUp.Jelly && hit.transform.gameObject.CompareTag("Slippery")) {
+				isSlippery = true;
+			}
+			var normal = Mathf.Abs(hit.normal.x);
+			if (normal >= 0.999 && normal <= 1.0001) {
+				result = true;
+			}
+		}
+
+		return result;
 	}
 
 	private bool isOnRightWall(out bool isSlippery) {
 		isSlippery = false;
-		float lengthToSearch = 0.1f;
+		float lengthToSearch = 0.05f;
 		var collider = GetComponent<BoxCollider2D>();
 		Vector2 start = new Vector2(collider.bounds.max.x + 0.001f, collider.bounds.center.y - collider.bounds.extents.y / 2f);
 		Vector2 end = new Vector2(start.x + lengthToSearch, start.y);
-		RaycastHit2D hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
-		if (!hit) {
-			// Try higher up
+		RaycastHit2D[] hits = Physics2D.LinecastAll(start, end, ALL_BUT_TRIGGERS);
+		if (hits.Length == 0) {
 			start.y -= collider.bounds.extents.y / 2f;
 			end.y = start.y;
-			hit = Physics2D.Linecast(start, end, ALL_BUT_TRIGGERS);
-		} else {
-			isSlippery = hit.transform.gameObject.CompareTag("Slippery");
+			hits = Physics2D.LinecastAll(start, end, ALL_BUT_TRIGGERS);
 		}
-		return hit && hit.normal.x == -1;
+
+		bool result = false;
+		foreach (var hit in hits) {
+			if (PowerUpState != PowerUp.Jelly && hit.transform.gameObject.CompareTag("Slippery")) {
+				isSlippery = true;
+			}
+			var normal = Mathf.Abs(hit.normal.x);
+			if (normal >= 0.999 && normal <= 1.0001) {
+				result = true;
+			}
+		}
+		if (hits.Length == 1) {
+			Debug.DrawLine(transform.position, hits[0].transform.position, Color.green);
+			Debug.Log(hits[0].normal.x);
+		}
+		return result;
 	}
 
 	void Start() {
@@ -148,6 +175,9 @@ public class PlayerInput : MonoBehaviour {
 			transform.localScale = localScale;
 		}
 
+		// Make sure that if the gravity has been tweaked, change it back
+		rigidBody.gravityScale = initialGravity;
+
 		if (grounded) {
 			if (horizontal == 0f) {
 				horizontalSpeed = 0f;
@@ -187,6 +217,10 @@ public class PlayerInput : MonoBehaviour {
 				horizontalSpeed -= acceleration * Time.deltaTime;
 			}
 		} else if (onWall && ((hitLeftWall && !slipperyLeft) || (hitRightWall && !slipperyRight))) {
+			if (PowerUpState == PowerUp.Jelly) {
+				verticalSpeed = 0f;
+				rigidBody.gravityScale = 0f;
+			}
 			if (!prevJumpPressed && jumpPressed) {
 				verticalSpeed = WallJumpVerticalSpeed;
 				maxSpeed = (holdingRun) ? MaxRunSpeed : MaxSpeed;
@@ -205,7 +239,7 @@ public class PlayerInput : MonoBehaviour {
 		}
 
 		previousHorizontal = horizontal;
-        rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
+		rigidBody.velocity = new Vector2(horizontalSpeed, verticalSpeed);
 		var animator = GetComponent<Animator>();
 		animator.SetBool("IsRunning", horizontalSpeed != 0f && !inAir);
 		animator.SetBool("IsInAir", inAir);
