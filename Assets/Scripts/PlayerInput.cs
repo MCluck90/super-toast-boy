@@ -92,10 +92,6 @@ public class PlayerInput : MonoBehaviour {
 				result = true;
 			}
 		}
-		if (hits.Length == 1) {
-			Debug.DrawLine(transform.position, hits[0].transform.position, Color.green);
-			Debug.Log(hits[0].normal.x);
-		}
 		return result;
 	}
 
