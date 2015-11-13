@@ -256,6 +256,9 @@ public class PlayerInput : MonoBehaviour {
 			Application.LoadLevel(Application.loadedLevel + 1);
 		} else if (other.CompareTag("Enemy") && !isInvincible) {
 			Die();
+		} else if (other.CompareTag("JellyJar")) {
+			PowerUpState = PowerUp.Jelly;
+			other.gameObject.SetActive(false);
 		}
 	}
 
@@ -263,6 +266,15 @@ public class PlayerInput : MonoBehaviour {
 		// Later, add sound effects etc.
 		transform.position = spawnPoint;
 		rigidBody.velocity = Vector2.zero;
+		PowerUpState = PowerUp.None;
+
+		// Reset powerups
+		var powerups = GameObject.Find("PowerUps");
+		if (powerups != null) {
+			foreach (Transform childTransform in powerups.transform) {
+				childTransform.gameObject.SetActive(true);
+			}
+		}
 	}
 
 	// Any and all cheat codes available here
