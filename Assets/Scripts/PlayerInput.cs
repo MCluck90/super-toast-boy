@@ -280,6 +280,7 @@ public class PlayerInput : MonoBehaviour {
 	// Any and all cheat codes available here
 	public void Cheats() {
 		// Let the player choose their level, main menu through 1-4
+		// or let them choose their powerup
 		KeyCode[] levels = new KeyCode[] {
 			KeyCode.Alpha0,
 			KeyCode.Alpha1,
@@ -287,9 +288,21 @@ public class PlayerInput : MonoBehaviour {
 			KeyCode.Alpha3,
 			KeyCode.Alpha4
 		};
+		PowerUp[] powerUps = new PowerUp[] {
+			PowerUp.None,
+			PowerUp.Jelly,
+			PowerUp.None,
+			PowerUp.None,
+			PowerUp.None
+		};
 		for (int i = 0; i < levels.Length; i++) {
 			if (Input.GetKeyDown(levels[i])) {
-				Application.LoadLevel(i);
+				if (Input.GetKey(KeyCode.Tab)) {
+					PowerUpState = powerUps[i];
+				}
+				else {
+					Application.LoadLevel(i);
+				}
 			}
 		}
 
