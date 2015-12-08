@@ -18,6 +18,9 @@ public class milkSpit : MonoBehaviour
     private GameObject spit5;
     private Vector2 initialPos5;
     private Quaternion initialRotation5;
+    private GameObject spit6;
+    private Vector2 initialPos6;
+    private Quaternion initialRotation6;
 
     // Use this for initialization
     void Start()
@@ -33,6 +36,8 @@ public class milkSpit : MonoBehaviour
         initialRotation4 = spit4.transform.rotation;
         spit5 = GameObject.Find("milkSpit5");
         initialRotation5 = spit5.transform.rotation;
+        spit6 = GameObject.Find("milkSpit6");
+        initialRotation6 = spit6.transform.rotation;
     }
 
     // Update is called once per frame
@@ -43,6 +48,7 @@ public class milkSpit : MonoBehaviour
         theSpit(spit3, initialRotation3);
         theSpit(spit4, initialRotation4);
         theSpit(spit5, initialRotation5);
+        theSpit(spit6, initialRotation6);
     }
     void theSpit(GameObject aSpit, UnityEngine.Quaternion rot)
     {
