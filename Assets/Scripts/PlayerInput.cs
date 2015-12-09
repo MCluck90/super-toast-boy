@@ -18,6 +18,11 @@ public class PlayerInput : MonoBehaviour {
 	private float initialGravity;
 	private float previousHorizontal = 0f;
 	private bool isInvincible = false;
+
+	private AudioSource source;
+	private float volLowRange = .5f;
+	private float volHighRange = 1.0f;
+	public AudioClip JumpSound;
 	
 	public float MaxSpeed;
 	public float MaxRunSpeed;
@@ -95,6 +100,11 @@ public class PlayerInput : MonoBehaviour {
 		return result;
 	}
 
+
+	void Awake(){
+		source = GetComponent<AudioSource> ();
+	}
+
 	void Start() {
 		renderer = GetComponent<SpriteRenderer>();
 		rigidBody = GetComponent<Rigidbody2D>();
@@ -102,6 +112,7 @@ public class PlayerInput : MonoBehaviour {
 		jumpPressed = Input.GetButton("Jump");
 		inAir = false;
 		initialGravity = rigidBody.gravityScale;
+
 	}
 
 	void FixedUpdate() {
@@ -195,6 +206,8 @@ public class PlayerInput : MonoBehaviour {
 			
 			if (!prevJumpPressed && jumpPressed) {
 				verticalSpeed = JumpSpeed;
+				source.PlayOneShot(JumpSound,1F);
+
 			}
 
 			var normalAngle = Mathf.Floor(Vector2.Angle(transform.up, groundNormal));
@@ -222,8 +235,10 @@ public class PlayerInput : MonoBehaviour {
 				maxSpeed = (holdingRun) ? MaxRunSpeed : MaxSpeed;
 				if (hitLeftWall) {
 					horizontalSpeed = WallJumpHorizontalSpeed;
+					source.PlayOneShot(JumpSound,1F);
 				} else {
 					horizontalSpeed = -WallJumpHorizontalSpeed;
+					source.PlayOneShot(JumpSound,1F);
 				}
 			}
 		}
