@@ -310,13 +310,16 @@ public class PlayerInput : MonoBehaviour {
 			PowerUp.None,
 			PowerUp.None
 		};
-		for (int i = 0; i < levels.Length; i++) {
+		// Change level
+		if (Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.KeypadPlus)) {
+			Application.LoadLevel(Application.loadedLevel + 1);
+		} else if (Input.GetKey(KeyCode.Minus) || Input.GetKey(KeyCode.KeypadMinus)) {
+			Application.LoadLevel(Application.loadedLevel - 1);
+		}
+		for (int i = 0; i < powerUps.Length; i++) {
 			if (Input.GetKeyDown(levels[i])) {
 				if (Input.GetKey(KeyCode.Tab)) {
 					PowerUpState = powerUps[i];
-				}
-				else {
-					Application.LoadLevel(i);
 				}
 			}
 		}
